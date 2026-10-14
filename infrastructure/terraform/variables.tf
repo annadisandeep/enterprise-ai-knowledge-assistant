@@ -78,9 +78,21 @@ variable "backend_min_instances" {
 }
 
 variable "backend_max_instances" {
-  description = "Maximum backend instances (caps cost and concurrency)."
+  description = <<-EOT
+    Maximum backend instances. MUST stay at 1 while the vector store is the
+    gcsfuse-backed Chroma (SQLite + hnswlib). Chroma's on-disk persistence is a
+    SINGLE-WRITER store and SQLite needs POSIX file locking that gcsfuse does not
+    reliably provide; two or more instances writing the same bucket can corrupt
+    the index. Only raise this after migrating to a concurrency-safe backend
+    (managed/hosted vector DB, pgvector on Cloud SQL, etc.). See DEPLOYMENT.md.
+  EOT
   type        = number
-  default     = 3
+  default     = 1
+
+  validation {
+    condition     = var.backend_max_instances >= 1
+    error_message = "backend_max_instances must be >= 1."
+  }
 }
 
 variable "frontend_min_instances" {

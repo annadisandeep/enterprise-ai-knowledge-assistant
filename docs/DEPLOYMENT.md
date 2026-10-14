@@ -105,16 +105,19 @@ Terraform wires these secrets into the Cloud Run service as environment variable
 From `infrastructure/terraform/`, create a `terraform.tfvars` (names are illustrative — match them to the variables declared in the Terraform module):
 
 ```hcl
-project_id      = "your-gcp-project-id"
-region          = "us-central1"
-repository      = "knowledge-assistant"
-backend_image   = "us-central1-docker.pkg.dev/your-gcp-project-id/knowledge-assistant/backend:latest"
-chroma_bucket   = "your-project-chroma-bucket"   # globally unique
-min_instances   = 0                               # scale to zero — keep costs near $0
-max_instances   = 2
+project_id            = "your-gcp-project-id"
+region                = "us-central1"
+repository_name       = "knowledge-assistant"
+backend_image         = "us-central1-docker.pkg.dev/your-gcp-project-id/knowledge-assistant/knowledge-backend:latest"
+frontend_image        = "us-central1-docker.pkg.dev/your-gcp-project-id/knowledge-assistant/knowledge-frontend:latest"
+cors_allow_origins    = "https://<frontend-cloud-run-url>"
+gemini_api_key        = "REPLACE_WITH_YOUR_GEMINI_API_KEY"    # keep out of git (*.tfvars is ignored)
+api_key               = "REPLACE_WITH_A_STRONG_RANDOM_SECRET"
+backend_min_instances = 0                                     # scale to zero — keep costs near $0
+backend_max_instances = 1                                     # MUST be 1 (single-writer Chroma; see below)
 ```
 
-> Inspect the actual variable names in `infrastructure/terraform/variables.tf` and set exactly those. Do not invent variables.
+> These names match `infrastructure/terraform/variables.tf`. Always confirm against that file and `terraform.tfvars.example`; do not invent variables.
 
 ---
 
@@ -145,11 +148,33 @@ Cloud Run instances are **stateless and ephemeral**: local disk is wiped between
 
 **This design** mounts a **GCS bucket via gcsfuse** as the Chroma persistence directory, so data survives restarts and scale events.
 
-**Honest tradeoff:**
-- gcsfuse is **not** a high-throughput, strongly-consistent database. It is perfectly fine for a **single-instance demo**.
-- For concurrent writers or higher scale, you would hit consistency and performance limits. **Recommended upgrade:** move to a **managed vector database** (hosted Chroma, `pgvector` on Cloud SQL, or a dedicated vector service) and a managed metadata store, and keep Cloud Run truly stateless.
+**Unresolved risks (read before relying on this in production):**
 
-This is documented plainly so reviewers understand the scope. See [ARCHITECTURE.md](ARCHITECTURE.md#design-decisions).
+- **Concurrent writers can corrupt data.** Chroma persists to SQLite + an hnswlib
+  index on disk. It is a **single-writer** store, and SQLite requires POSIX file
+  locking that **gcsfuse does not reliably provide**. If two or more backend
+  instances mount the same bucket and write at once, the index/DB can be
+  corrupted. The Terraform therefore pins **`backend_max_instances = 1`**, which
+  is the only safe setting with this storage design.
+- **This caps throughput and availability.** One writer instance means no
+  horizontal scale for writes and a single point of failure. `min_instances = 0`
+  also adds cold-start latency while the model and index load from the bucket.
+- **gcsfuse is object storage, not a disk.** Writes are not atomically flushed the
+  way a local/POSIX disk guarantees, so a crash mid-write (or an OOM kill) can
+  leave the on-disk index inconsistent. There is **no automatic integrity repair**.
+  Enable **GCS object versioning** and/or periodic bucket snapshots so a corrupt
+  state can be rolled back; this project does **not** configure backups for you.
+- **Performance.** The HNSW index does many small reads/writes; over gcsfuse these
+  are slower and higher-latency than local SSD.
+
+**Do not treat this as cloud-production-ready.** It is a cost-efficient
+**single-instance demo** architecture. For real production (concurrency, HA,
+integrity guarantees), **migrate to a concurrency-safe vector database** — hosted
+Chroma, `pgvector` on Cloud SQL, or a managed vector service — plus a managed
+metadata store, and keep Cloud Run truly stateless. Only then raise
+`backend_max_instances`.
+
+This is documented plainly so reviewers understand the scope. See [ARCHITECTURE.md](ARCHITECTURE.md#design-decisions) and [SECURITY.md](SECURITY.md).
 
 ---
 

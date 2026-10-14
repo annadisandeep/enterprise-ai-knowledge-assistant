@@ -1,7 +1,11 @@
 # ---- Web framework ----
-fastapi==0.115.6
+# fastapi/starlette bumped during release verification to clear published
+# advisories in starlette (<=0.41.x) and keep the web stack patched.
+fastapi==0.143.0
+starlette==1.8.0          # pinned explicitly so the patched version is auditable
 uvicorn[standard]==0.32.1
-python-multipart==0.0.18
+# python-multipart>=0.0.31 fixes PYSEC-2026-3039/3040 (multipart parsing DoS).
+python-multipart==0.0.32
 pydantic==2.10.3
 pydantic-settings==2.7.0
 
@@ -16,4 +20,5 @@ chromadb==0.5.23
 pymupdf==1.25.1
 
 # ---- Utilities ----
-python-dotenv==1.0.1
+# python-dotenv>=1.2.2 fixes PYSEC-2026-2270.
+python-dotenv==1.2.4
