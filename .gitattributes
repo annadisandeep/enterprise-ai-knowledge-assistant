@@ -1,0 +1,18 @@
+# Normalise line endings to LF in the repo so files that run inside Linux
+# containers (shell scripts, Dockerfiles, nginx config, entrypoints) are never
+# checked out with CRLF.
+* text=auto eol=lf
+
+# Explicitly LF for files that must be LF on Linux.
+*.sh      text eol=lf
+*.py      text eol=lf
+*.ts      text eol=lf
+*.tsx     text eol=lf
+Dockerfile text eol=lf
+*.conf    text eol=lf
+
+# Binary files git should not touch.
+*.png     binary
+*.jpg     binary
+*.pdf     binary
+*.ico     binary
