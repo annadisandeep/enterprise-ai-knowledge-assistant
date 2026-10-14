@@ -90,8 +90,12 @@ variable "backend_max_instances" {
   default     = 1
 
   validation {
-    condition     = var.backend_max_instances >= 1
-    error_message = "backend_max_instances must be >= 1."
+    # Hard single-writer guard: the gcsfuse-backed Chroma store (SQLite + hnswlib)
+    # is NOT safe for concurrent writers, so exactly one instance is permitted.
+    # Raising this requires first migrating to a concurrency-safe vector DB AND
+    # relaxing this validation together (see the description and DEPLOYMENT.md).
+    condition     = var.backend_max_instances == 1
+    error_message = "backend_max_instances must be exactly 1 while using the GCS-mounted (gcsfuse) Chroma store, which is single-writer; concurrent instances can corrupt the index. Migrate to a concurrency-safe vector database before changing this."
   }
 }
 
