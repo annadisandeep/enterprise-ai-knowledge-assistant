@@ -1,0 +1,29 @@
+Acme Corp Information Security Handbook
+
+Password Policy
+Employees must use passwords of at least 14 characters that include a mix of
+upper and lower case letters, numbers, and symbols. Passwords must be rotated
+every 180 days. Reusing any of the previous five passwords is prohibited. All
+accounts that support it must enable multi-factor authentication (MFA).
+
+Data Classification
+Acme classifies data into four tiers: Public, Internal, Confidential, and
+Restricted. Restricted data includes customer payment information and must be
+encrypted both at rest and in transit. Only employees with a documented business
+need may access Restricted data.
+
+Incident Reporting
+Any suspected security incident must be reported to the Security Operations
+Center within one hour of discovery by emailing security@acme.example or calling
+the 24/7 hotline. Do not attempt to investigate or remediate an incident on your
+own unless instructed by the Security team.
+
+Acceptable Use
+Company systems may be used for incidental personal use that does not interfere
+with work, consume significant resources, or violate any law or policy. Installing
+unapproved software on company devices is prohibited.
+
+Phishing
+Never click links or open attachments from unexpected emails. Report suspected
+phishing using the "Report Phishing" button in the email client. Acme will never
+ask for your password by email or phone.

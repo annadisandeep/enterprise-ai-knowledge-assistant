@@ -1,0 +1,19 @@
+# ---- Web framework ----
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.18
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# ---- AI / RAG ----
+# Google's current unified GenAI SDK (replaces the deprecated google-generativeai package).
+google-genai==1.2.0
+# Local embeddings so we never pay per-token for vectorisation and keep data on-box.
+sentence-transformers==3.3.1
+# Vector database with on-disk persistence.
+chromadb==0.5.23
+# PDF text extraction.
+pymupdf==1.25.1
+
+# ---- Utilities ----
+python-dotenv==1.0.1

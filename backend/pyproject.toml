@@ -1,0 +1,25 @@
+[project]
+name = "enterprise-ai-knowledge-assistant-backend"
+version = "0.1.0"
+description = "RAG backend for the Enterprise AI Knowledge Assistant"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "C4", "SIM"]
+ignore = ["B008"]  # FastAPI uses function calls in argument defaults (Depends/File).
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/main.py"]

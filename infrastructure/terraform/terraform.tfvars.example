@@ -1,0 +1,41 @@
+# ============================================================================
+# EXAMPLE variable values. Copy this file to `terraform.tfvars` and fill in
+# your real values:
+#
+#     cp terraform.tfvars.example terraform.tfvars
+#
+# SECURITY: terraform.tfvars contains SECRETS (API keys). NEVER commit it.
+# `*.tfvars` is gitignored for this directory (see infrastructure/terraform/
+# .gitignore). Double-check with `git status` before committing.
+# Everything below is a placeholder — none of these are real values.
+# ============================================================================
+
+project_id      = "my-gcp-project-id"
+region          = "us-central1"
+repository_name = "knowledge-assistant"
+
+# Container images (with tags). Replace <TAG> after you build/push.
+# Format: <region>-docker.pkg.dev/<project>/<repo>/<service>:<tag>
+backend_image  = "us-central1-docker.pkg.dev/my-gcp-project-id/knowledge-assistant/knowledge-backend:latest"
+frontend_image = "us-central1-docker.pkg.dev/my-gcp-project-id/knowledge-assistant/knowledge-frontend:latest"
+
+# Comma-separated allowed browser origins (no spaces). Usually the frontend URL.
+# You will know the exact frontend URL after the first apply; update then.
+cors_allow_origins = "https://knowledge-frontend-xxxxxxxxxx-uc.a.run.app"
+
+# Embedding backend: "sentence-transformers" (semantic) or "hashing" (cheap).
+embedding_backend = "sentence-transformers"
+
+# ---- SECRETS — replace with real values, keep them out of version control ----
+gemini_api_key = "REPLACE_WITH_YOUR_GEMINI_API_KEY"
+api_key        = "REPLACE_WITH_A_STRONG_RANDOM_SHARED_SECRET"
+
+# Access model: true = services are publicly invocable (backend still guarded by
+# the app API key). Set false to require Google IAM auth on the invoker.
+allow_public_access = true
+
+# Scaling (keep small for a demo to control cost).
+backend_min_instances  = 0
+backend_max_instances  = 3
+frontend_min_instances = 0
+frontend_max_instances = 3

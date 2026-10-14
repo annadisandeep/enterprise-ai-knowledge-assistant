@@ -1,0 +1,31 @@
+# Keep the build context small and secrets out of the image.
+# Paths are relative to the backend/ build context.
+
+# Local virtualenvs
+.venv/
+venv/
+
+# Python caches / build artefacts
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Local vector-store / runtime data (recreated at runtime; never bake it in)
+data/
+
+# Secrets — never copy real env files into an image
+.env
+.env.*
+
+# Tests are not needed in the production image
+tests/
+
+# Docs / misc
+*.md
+.coverage
+coverage.xml
+htmlcov/

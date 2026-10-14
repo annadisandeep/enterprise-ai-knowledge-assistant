@@ -1,0 +1,56 @@
+# ============================================================================
+# docker-compose.yml  —  LOCAL DEVELOPMENT ONLY
+# ----------------------------------------------------------------------------
+# This file is for running the whole stack on your laptop with one command:
+#     docker compose up --build
+#
+# It is NOT used in production. Production runs on Google Cloud Run and is
+# described in infrastructure/terraform/ and .github/workflows/deploy.yml.
+#
+# After `up`:
+#   - Backend  API : http://localhost:8080  (health: /api/health)
+#   - Frontend SPA : http://localhost:5173   (served by nginx on container 8080)
+# ============================================================================
+
+services:
+  backend:
+    build: ./backend
+    # Host:Container. The backend listens on 8080 inside the container.
+    ports:
+      - "8080:8080"
+    # Loads your local secrets/config. Copy backend/.env.example -> backend/.env.
+    env_file:
+      - backend/.env
+    # Explicit overrides that should always hold for local container runs,
+    # regardless of what .env says. CHROMA_PERSIST_DIR points at the mounted
+    # volume below so your indexed documents survive `compose down`.
+    environment:
+      ENVIRONMENT: development
+      CHROMA_PERSIST_DIR: /app/data/chroma
+    # Persist the Chroma vector store on the host so data is not lost when the
+    # container is recreated.
+    volumes:
+      - ./backend/data:/app/data
+    # Mirrors the Dockerfile HEALTHCHECK so compose can gate `depends_on`.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8080/api/health').status == 200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Point the browser at the backend container published on the host.
+        # (The browser runs on your machine, so it uses localhost, not the
+        # compose service name.)
+        VITE_API_BASE_URL: http://localhost:8080/api
+    # Host 5173 -> container 8080 (nginx). 5173 is the familiar Vite dev port.
+    ports:
+      - "5173:8080"
+    # Wait until the backend reports healthy before starting the frontend.
+    depends_on:
+      backend:
+        condition: service_healthy

@@ -1,0 +1,66 @@
+{
+  "description": "Synthetic RAG evaluation set for the Acme sample documents. Each case lists a question, the document that should supply the answer, and keywords expected in a correct grounded response. 'no_answer' cases should trigger the explicit fallback.",
+  "documents": [
+    "acme-remote-work-policy.md",
+    "acme-security-handbook.txt",
+    "acme-pto-benefits.md"
+  ],
+  "cases": [
+    {
+      "id": "remote-days",
+      "question": "How many days per week can an eligible employee work remotely?",
+      "expected_source": "acme-remote-work-policy.md",
+      "expected_keywords": ["three", "3"],
+      "type": "grounded"
+    },
+    {
+      "id": "furniture-stipend",
+      "question": "What is the home-office furniture stipend?",
+      "expected_source": "acme-remote-work-policy.md",
+      "expected_keywords": ["300"],
+      "type": "grounded"
+    },
+    {
+      "id": "password-length",
+      "question": "What is the minimum password length required?",
+      "expected_source": "acme-security-handbook.txt",
+      "expected_keywords": ["14"],
+      "type": "grounded"
+    },
+    {
+      "id": "incident-window",
+      "question": "How quickly must a security incident be reported?",
+      "expected_source": "acme-security-handbook.txt",
+      "expected_keywords": ["one hour", "1 hour"],
+      "type": "grounded"
+    },
+    {
+      "id": "parental-leave",
+      "question": "How much paid parental leave does Acme offer?",
+      "expected_source": "acme-pto-benefits.md",
+      "expected_keywords": ["16 weeks"],
+      "type": "grounded"
+    },
+    {
+      "id": "401k-match",
+      "question": "What is the 401(k) matching percentage?",
+      "expected_source": "acme-pto-benefits.md",
+      "expected_keywords": ["4 percent", "4%"],
+      "type": "grounded"
+    },
+    {
+      "id": "unknown-ceo-salary",
+      "question": "What is the CEO's annual salary?",
+      "expected_source": null,
+      "expected_keywords": [],
+      "type": "no_answer"
+    },
+    {
+      "id": "unknown-office-location",
+      "question": "What city is the company headquarters located in?",
+      "expected_source": null,
+      "expected_keywords": [],
+      "type": "no_answer"
+    }
+  ]
+}

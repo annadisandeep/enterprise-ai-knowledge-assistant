@@ -1,0 +1,10 @@
+# Never commit real variable values (they contain API keys / secrets).
+*.tfvars
+!*.tfvars.example
+
+# Local Terraform state and working files.
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log

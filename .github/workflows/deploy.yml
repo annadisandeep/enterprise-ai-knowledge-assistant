@@ -1,0 +1,134 @@
+# ============================================================================
+# Manual deploy to Google Cloud Run.
+# ----------------------------------------------------------------------------
+# IMPORTANT:
+#   * This workflow runs ONLY when triggered by hand (workflow_dispatch).
+#     It is never triggered by push/PR, so a normal commit will NOT deploy.
+#   * It requires several repository secrets to exist (see "env" + comments).
+#     Without them the job will fail fast — by design.
+#   * It assumes the Artifact Registry repo, service accounts, secrets, and
+#     Cloud Run services already exist (provisioned by Terraform in
+#     infrastructure/terraform/). This workflow only builds new images and
+#     rolls them out.
+#
+# Authentication uses Workload Identity Federation (WIF) — NO long-lived JSON
+# service-account keys are stored in GitHub. You configure a WIF provider that
+# trusts this repository, and GitHub mints short-lived tokens at run time.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   GCP_PROJECT_ID      e.g. my-gcp-project
+#   GCP_REGION          e.g. us-central1
+#   GCP_WIF_PROVIDER    full resource name of the WIF provider, e.g.
+#                       projects/123456789/locations/global/workloadIdentityPools/github/providers/github
+#   GCP_SERVICE_ACCOUNT the deployer service account email, e.g.
+#                       github-deployer@my-gcp-project.iam.gserviceaccount.com
+#
+# Backend runtime secrets (API_KEY, GEMINI_API_KEY) are NOT passed here. They
+# live in Secret Manager and are wired to the service by Terraform, so they
+# never touch CI logs. This workflow only updates the image + non-secret env.
+# ============================================================================
+name: Deploy to Cloud Run (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to build and deploy (defaults to the commit SHA)."
+        required: false
+        default: ""
+
+# Only one deploy at a time; let a running deploy finish rather than cancel it.
+concurrency:
+  group: deploy-cloud-run
+  cancel-in-progress: false
+
+env:
+  # Names must match what Terraform created.
+  ARTIFACT_REPO: knowledge-assistant       # Artifact Registry repository name
+  BACKEND_SERVICE: knowledge-backend       # Cloud Run service name (backend)
+  FRONTEND_SERVICE: knowledge-frontend     # Cloud Run service name (frontend)
+
+jobs:
+  deploy:
+    name: Build images and deploy
+    runs-on: ubuntu-latest
+
+    # Required so GitHub can mint the OIDC token used by Workload Identity Fed.
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Resolve the tag once so both images share it. Falls back to the SHA.
+      - name: Resolve image tag
+        id: vars
+        run: |
+          TAG="${{ github.event.inputs.image_tag }}"
+          if [ -z "$TAG" ]; then TAG="${GITHUB_SHA::12}"; fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "image_base=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${ARTIFACT_REPO}" >> "$GITHUB_OUTPUT"
+
+      # --- Authenticate to Google Cloud via Workload Identity Federation ---
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      # Let Docker push to Artifact Registry using the short-lived credentials.
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+
+      # --- Backend image ---
+      - name: Build and push backend image
+        run: |
+          IMAGE="${{ steps.vars.outputs.image_base }}/${BACKEND_SERVICE}:${{ steps.vars.outputs.tag }}"
+          docker build -t "$IMAGE" ./backend
+          docker push "$IMAGE"
+
+      # --- Frontend image ---
+      # The backend URL is baked into the frontend bundle at build time. We read
+      # the live backend URL from the already-deployed Cloud Run service so the
+      # SPA always points at the right origin.
+      - name: Resolve backend URL
+        id: backend_url
+        run: |
+          URL=$(gcloud run services describe "${BACKEND_SERVICE}" \
+            --region "${{ secrets.GCP_REGION }}" \
+            --format "value(status.url)")
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push frontend image
+        run: |
+          IMAGE="${{ steps.vars.outputs.image_base }}/${FRONTEND_SERVICE}:${{ steps.vars.outputs.tag }}"
+          docker build \
+            --build-arg VITE_API_BASE_URL="${{ steps.backend_url.outputs.url }}/api" \
+            -t "$IMAGE" ./frontend
+          docker push "$IMAGE"
+
+      # --- Roll out new images to Cloud Run ---
+      # We only swap the image; all env vars, secrets, volumes, scaling, and the
+      # service account were configured by Terraform and are left untouched.
+      - name: Deploy backend
+        run: |
+          IMAGE="${{ steps.vars.outputs.image_base }}/${BACKEND_SERVICE}:${{ steps.vars.outputs.tag }}"
+          gcloud run deploy "${BACKEND_SERVICE}" \
+            --region "${{ secrets.GCP_REGION }}" \
+            --image "$IMAGE"
+
+      - name: Deploy frontend
+        run: |
+          IMAGE="${{ steps.vars.outputs.image_base }}/${FRONTEND_SERVICE}:${{ steps.vars.outputs.tag }}"
+          gcloud run deploy "${FRONTEND_SERVICE}" \
+            --region "${{ secrets.GCP_REGION }}" \
+            --image "$IMAGE"
+
+      - name: Summary
+        run: |
+          echo "Deployed tag ${{ steps.vars.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backend URL: ${{ steps.backend_url.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
