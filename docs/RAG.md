@@ -114,7 +114,7 @@ A chat response looks like:
     }
   ],
   "grounded": true,
-  "model": "gemini-2.5-flash",
+  "model": "gemini-3.5-flash-lite",
   "used_fallback": false
 }
 ```

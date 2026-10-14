@@ -68,7 +68,7 @@ Every tunable in the **Enterprise AI Knowledge Assistant** is an environment var
 | --- | --- | --- | --- |
 | `LLM_PROVIDER` | `gemini` | No | `gemini` (real) or `mock` (deterministic, no network). See [below](#llm-providers). |
 | `GEMINI_API_KEY` | _(empty)_ | **Yes when `LLM_PROVIDER=gemini`** | API key for Google Gemini. Get one free at [ai.google.dev](https://ai.google.dev). |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | No | Gemini model id. |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | No | Gemini model id. Override to any model your key can access (e.g. `gemini-3.8-flash`). The old `gemini-2.5-flash` default was retired for new API users. |
 | `LLM_TEMPERATURE` | `0.2` | No | Sampling temperature. Low = more deterministic, grounded answers. |
 | `LLM_MAX_OUTPUT_TOKENS` | `1024` | No | Maximum tokens in the generated answer. |
 | `LLM_TIMEOUT_SECONDS` | `30` | No | Request timeout for the LLM call. Exceeding it returns `504`. |
@@ -101,7 +101,7 @@ Both are normalized so cosine similarity is comparable. Switch with `EMBEDDING_B
 
 | Provider | Behavior | Needs a key? |
 | --- | --- | --- |
-| `gemini` | Calls `gemini-2.5-flash` via the `google-genai` SDK with your temperature/timeout/token settings | Yes (`GEMINI_API_KEY`) |
+| `gemini` | Calls the configured model (default `gemini-3.5-flash-lite`) via the `google-genai` SDK with your temperature/timeout/token settings | Yes (`GEMINI_API_KEY`) |
 | `mock` | Returns a deterministic, canned answer without any network call | No |
 
 Use `mock` for offline development and automated tests; use `gemini` for real answers.
@@ -115,7 +115,7 @@ Use `mock` for offline development and automated tests; use `gemini` for real an
 3. Create a key and copy it.
 4. Put it in `backend/.env` as `GEMINI_API_KEY=...` (local), or store it in **Secret Manager** for GCP (see [DEPLOYMENT.md](DEPLOYMENT.md)).
 
-The `gemini-2.5-flash` model has a generous free tier via Google AI Studio. Limits change over time — always check the current quotas and pricing on the official site. See [COST.md](COST.md).
+The default `gemini-3.5-flash-lite` model has a generous free tier via Google AI Studio. Model availability and limits change over time — if a model returns a "no longer available" error, set `GEMINI_MODEL` to a current one your key can access. Always check the current quotas and pricing on the official site. See [COST.md](COST.md).
 
 ---
 
