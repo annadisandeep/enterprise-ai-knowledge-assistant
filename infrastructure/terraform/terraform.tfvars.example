@@ -35,7 +35,10 @@ api_key        = "REPLACE_WITH_A_STRONG_RANDOM_SHARED_SECRET"
 allow_public_access = true
 
 # Scaling (keep small for a demo to control cost).
+# IMPORTANT: backend_max_instances MUST be 1 with the gcsfuse-backed Chroma store
+# (single-writer; see variables.tf / DEPLOYMENT.md). Raise it only after moving to
+# a concurrency-safe vector database. The frontend is stateless and may scale out.
 backend_min_instances  = 0
-backend_max_instances  = 3
+backend_max_instances  = 1
 frontend_min_instances = 0
 frontend_max_instances = 3

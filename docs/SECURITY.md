@@ -45,25 +45,26 @@ This document describes the security controls that **are implemented** in the En
 
 #### Known dependency advisories (triaged, not ignored)
 
-The audit tooling currently reports advisories that are **non-blocking in CI by
-design** (`continue-on-error: true`), because they are triaged as low practical
-risk for this project:
+During release verification the **web-facing** advisories were **fixed** by
+upgrading: `fastapi` → `0.143.0`, `starlette` → `1.8.0` (clears 7 Starlette
+advisories), `python-multipart` → `0.0.32` (clears PYSEC-2026-3039/3040 multipart
+parsing DoS), and `python-dotenv` → `1.2.4` (clears PYSEC-2026-2270). The full
+test suite still passes against the upgraded stack.
 
-- **`transformers` (transitive via `sentence-transformers`)** — multiple advisories,
-  nearly all concerning the loading of **untrusted models/configs** (unsafe
-  deserialization, tokenizer ReDoS, etc.). This app **only loads one fixed, trusted
-  model** (`all-MiniLM-L6-v2`) and **never loads user-supplied models**, so these
-  are not reachable in our usage. Mitigation path: bump `transformers` as
-  `sentence-transformers` compatibility allows, or switch the production image to
-  the `hashing` embedding backend (which needs neither `torch` nor `transformers`).
-- **Frontend dev tooling (`vite`/`esbuild`/`vitest`/`tinypool`)** — these are
-  **devDependencies only**. They are **not part of the shipped artifact** (the
-  production image is the static `dist/` bundle served by nginx), so they do not
-  run in production. Fixes require major-version bumps and are tracked separately
-  to avoid destabilizing the build.
+The following **remain** and are **non-blocking in CI by design**
+(`continue-on-error: true`), triaged as low practical risk here:
 
-The honest takeaway: these should be reviewed and updated on a schedule; they are
-surfaced (not hidden) and reasoned about, rather than silently suppressed.
+| Package | Advisories | Fixed in | Why deferred / mitigation |
+| --- | --- | --- | --- |
+| `transformers` 4.46.3 (transitive via `sentence-transformers`) | 26 (e.g. PYSEC-2024-227/228/229, PYSEC-2025-40/211–218, PYSEC-2026-19xx/2288–2290/3929) | various 4.48–5.10 (several unfixed) | Nearly all require **loading untrusted models/configs** (unsafe deserialization, tokenizer ReDoS). This app loads **one fixed, trusted model** (`all-MiniLM-L6-v2`) and **never loads user-supplied models**, so they are **not reachable** in our usage. Mitigation: deploy with the **`hashing` embedding backend** (needs neither `torch` nor `transformers`), or bump the ML stack (`sentence-transformers` 5.x) as compatibility allows. |
+| `sentence-transformers` 3.3.1 | PYSEC-2026-4164 | 5.6.0 | Requires a **major** upgrade (5.x) that would also pull newer `torch`/`transformers`; deferred to avoid destabilizing the verified build. Same "no untrusted models" reasoning applies. |
+| `chromadb` 0.5.23 | PYSEC-2026-3813/3814/3815 | **no fixed version published** | No upgrade target available at audit time; a 1.x bump is a major API change. Tracked for a follow-up once a fix ships. The store is not exposed directly to end users (backend-mediated). |
+| Frontend dev tooling (`vite`/`esbuild`/`vitest`/`tinypool`) | several (moderate–critical) | major bumps | **devDependencies only** — not in the shipped artifact (production is the static `dist/` served by nginx), so they do not run in production. |
+
+The honest takeaway: these are **surfaced and reasoned about, not suppressed**, and
+should be reviewed on a schedule. **This does not constitute cloud production
+readiness** — see the storage and multi-tenancy limitations above and in
+[DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 
@@ -80,6 +81,7 @@ This project is a **production-oriented portfolio demo**, not a hardened multi-t
 | **In-process model execution** | Embeddings and (for the hashing backend) similarity run **in the app process**. No isolation/sandboxing of model execution. |
 | **Encryption at rest** | Chroma data is **not encrypted at the application layer**; it relies on the underlying **GCS/disk encryption**. No field-level or app-managed encryption. |
 | **Audit logging** | **No structured audit log of queries** beyond application logs to stdout. No tamper-evident trail. |
+| **Data durability / concurrency** | The vector store (Chroma: SQLite + hnswlib) is **single-writer**. On GCP it persists to a **gcsfuse-mounted bucket**, which lacks the file locking SQLite needs, so the backend is pinned to **one instance** (`backend_max_instances = 1`). This means **no write scale-out, a single point of failure, and corruption risk on crash mid-write**. There are **no automatic backups** — enable GCS versioning/snapshots. Production use needs a concurrency-safe managed vector DB. See [DEPLOYMENT.md](DEPLOYMENT.md#stateless-cloud-run--storage-tradeoff). |
 | **Secret delivery to SPA** | `VITE_API_KEY` is inlined into the frontend bundle at build time — a key shipped to the browser is exposed. A real deployment should use a backend-for-frontend or gateway instead. |
 
 ---

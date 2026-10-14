@@ -137,6 +137,10 @@ resource "google_cloud_run_v2_service" "backend" {
   template {
     service_account = google_service_account.backend_runtime.email
 
+    # SINGLE-WRITER CONSTRAINT: max must be 1 while Chroma persists to the
+    # gcsfuse-mounted bucket below. Chroma (SQLite + hnswlib) is single-writer and
+    # gcsfuse lacks the file locking SQLite needs; concurrent instances would
+    # corrupt the index. var.backend_max_instances defaults to 1 for this reason.
     scaling {
       min_instance_count = var.backend_min_instances
       max_instance_count = var.backend_max_instances

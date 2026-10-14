@@ -9,6 +9,12 @@ import type {
 } from "../types";
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || "/api";
+
+// SECURITY: VITE_* values are inlined into the public bundle at build time, so
+// this key is readable by anyone who loads the site. Only ever set VITE_API_KEY
+// for local dev or a trusted/internal deployment — never a privileged production
+// backend key, and never the Gemini key (which is backend-only). See
+// frontend/.env.example and docs/SECURITY.md.
 const API_KEY = (import.meta.env.VITE_API_KEY as string) || "";
 
 export class ApiError extends Error {
