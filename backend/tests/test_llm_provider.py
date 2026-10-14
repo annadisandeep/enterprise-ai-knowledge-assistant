@@ -12,7 +12,7 @@ from app.services.llm_provider import (
 
 def test_missing_api_key_raises_config_error():
     with pytest.raises(LLMConfigError):
-        GeminiProvider(api_key="", model="gemini-2.5-flash")
+        GeminiProvider(api_key="", model="gemini-3.5-flash-lite")
 
 
 class _FakeExc(Exception):
@@ -36,7 +36,7 @@ def _provider_with_stub(monkeypatch, raised=None, text="ok"):
 
     # Build without the real SDK by monkeypatching genai.Client via the module.
     provider = GeminiProvider.__new__(GeminiProvider)
-    provider.model_name = "gemini-2.5-flash"
+    provider.model_name = "gemini-3.5-flash-lite"
     provider._temperature = 0.2
     provider._max_output_tokens = 256
     provider._timeout_ms = 30000

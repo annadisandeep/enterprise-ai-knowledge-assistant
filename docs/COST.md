@@ -22,8 +22,8 @@ The only "cost" is the one-time download of the `all-MiniLM-L6-v2` model if you 
 
 | Item | Notes |
 | --- | --- |
-| **`gemini-2.5-flash` free tier** | Google AI Studio offers a **generous free tier** for this model — often enough for a personal demo. **Check current limits and pricing at [ai.google.dev](https://ai.google.dev).** |
-| **Paid usage** | Beyond the free tier, Gemini is billed per input/output token. `gemini-2.5-flash` is one of the cheaper, fast models. |
+| **`gemini-3.5-flash-lite` free tier** | Google AI Studio offers a **generous free tier** for this flash-lite model — often enough for a personal demo. **Check current limits and pricing at [ai.google.dev](https://ai.google.dev).** |
+| **Paid usage** | Beyond the free tier, Gemini is billed per input/output token. `gemini-3.5-flash-lite` is one of the cheaper, fast models. |
 | **How to minimize** | Use `mock` in tests/CI; keep `MAX_CONTEXT_CHARS` and `LLM_MAX_OUTPUT_TOKENS` reasonable; cache/avoid redundant calls. |
 
 ---

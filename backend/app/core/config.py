@@ -66,7 +66,10 @@ class Settings(BaseSettings):
     # ---- LLM provider ----
     llm_provider: Literal["gemini", "mock"] = "gemini"
     gemini_api_key: str = Field(default="", repr=False)
-    gemini_model: str = "gemini-2.5-flash"
+    # Override with the GEMINI_MODEL env var. The previous default gemini-2.5-flash
+    # was retired for new API users ("no longer available to new users"); this is a
+    # current, widely-available, low-cost flash model verified against the live API.
+    gemini_model: str = "gemini-3.5-flash-lite"
     llm_temperature: float = 0.2
     llm_max_output_tokens: int = 1024
     llm_timeout_seconds: float = 30.0

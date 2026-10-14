@@ -202,7 +202,7 @@ curl -X POST http://localhost:8000/api/chat \
     }
   ],
   "grounded": true,
-  "model": "gemini-2.5-flash",
+  "model": "gemini-3.5-flash-lite",
   "used_fallback": false
 }
 ```
@@ -214,7 +214,7 @@ curl -X POST http://localhost:8000/api/chat \
 | `answer` | string | The generated answer (or an explicit no-answer message). |
 | `citations` | array | Sources derived from retrieval — each has `document_id`, `filename`, `chunk_id`, `chunk_index`, `similarity`, `snippet`. Never fabricated by the model. |
 | `grounded` | boolean | `true` if the answer is backed by retrieved context; `false` for no-answer cases. |
-| `model` | string | The model/provider used (e.g., `gemini-2.5-flash` or the mock). |
+| `model` | string | The model/provider used (e.g., `gemini-3.5-flash-lite` or the mock). |
 | `used_fallback` | boolean | Whether a fallback path was used. |
 
 **Errors:**

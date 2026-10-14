@@ -7,7 +7,7 @@
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
-![Gemini](https://img.shields.io/badge/Google-Gemini_2.5_Flash-4285F4?logo=google&logoColor=white)
+![Gemini](https://img.shields.io/badge/Google-Gemini_3.5_Flash_Lite-4285F4?logo=google&logoColor=white)
 ![Chroma](https://img.shields.io/badge/Vector_DB-Chroma-FF6B6B)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC?logo=terraform&logoColor=white)
@@ -83,7 +83,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full breakdown.
 | Layer | Technology |
 | --- | --- |
 | **Backend** | Python 3.12 (3.11 works locally), FastAPI, Pydantic v2, pydantic-settings, uvicorn |
-| **RAG / AI** | Google Gemini (`gemini-2.5-flash`) via `google-genai`; sentence-transformers `all-MiniLM-L6-v2` (384-dim) with a deterministic hashing fallback; Chroma vector DB; PyMuPDF for PDF text extraction |
+| **RAG / AI** | Google Gemini (`gemini-3.5-flash-lite`, configurable via `GEMINI_MODEL`) via `google-genai`; sentence-transformers `all-MiniLM-L6-v2` (384-dim) with a deterministic hashing fallback; Chroma vector DB; PyMuPDF for PDF text extraction |
 | **Frontend** | React + TypeScript + Vite + Tailwind CSS (static SPA) |
 | **Testing** | pytest (backend), vitest + Testing Library (frontend) |
 | **DevOps** | Docker, docker-compose, GitHub Actions CI (incl. pip-audit / npm audit) |
