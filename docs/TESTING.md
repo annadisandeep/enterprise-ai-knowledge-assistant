@@ -17,6 +17,8 @@ This lets CI validate the **entire pipeline and contract** (upload, extraction, 
 
 ## Backend tests (pytest)
 
+**Current result (2026-10-15, CI configuration):** 67 passed, 0 skipped in about 40 s. The two semantic evaluation tests ran because sentence-transformers is installed locally; they auto-skip in the slim CI environment.
+
 ### Run them
 
 ```bash
@@ -37,7 +39,7 @@ Run a subset:
 
 ```bash
 pytest -k "upload or citation"       # by keyword
-pytest tests/test_chat.py            # a single file
+pytest tests/test_chat_api.py        # a single file
 pytest -v                            # verbose
 ```
 
@@ -61,6 +63,9 @@ pytest -v                            # verbose
 | **Prompt injection** | Document content framed as untrusted data; citations can't be forged through injected text |
 | **API auth** | With `API_KEY` set, protected endpoints require a valid `X-API-Key`; health stays public |
 | **Semantic eval** | Retrieval quality over the synthetic evaluation set (skips when the model is unavailable — see below) |
+| **Configuration** | Default Gemini model id (`gemini-3.5-flash-lite`), override via env, provider selection |
+
+Per-file counts: `test_extraction` 10, `test_rag_engine` 8, `test_chat_api` 7, `test_auth` 6, `test_chunking` 6, `test_documents_api` 6, `test_llm_provider` 6, `test_config` 5, `test_embeddings` 5, `test_retrieval` 4, `test_eval` 2, `test_health` 2.
 
 ---
 
@@ -86,6 +91,8 @@ EMBEDDING_BACKEND=sentence-transformers pytest -k eval
 ---
 
 ## Frontend tests (vitest + Testing Library)
+
+**Current result (2026-10-15):** 13 passed across 5 files (`ChatMessage`, `ChatPanel`, `Citations`, `UploadDropzone`, `utils`).
 
 ```bash
 cd frontend
