@@ -12,7 +12,9 @@ Repository: **[github.com/annadisandeep/enterprise-ai-knowledge-assistant](https
 
 What sets the project apart is its focus on **engineering discipline around AI**, not just calling an LLM. Retrieval is boundary-aware and threshold-filtered; **citations are assembled from the retrieval layer so the model physically cannot fabricate a source**; and the system returns an honest "I don't know" when the documents don't contain an answer. Security is treated as a first-class concern — API-key auth with constant-time comparison, strict CORS, upload magic-byte validation, SHA-256 duplicate detection, and layered prompt-injection defenses — and the codebase is honest about its limitations rather than overclaiming.
 
-The project is also **operationally complete**: it ships with a fast, deterministic test suite (external AI is mocked so CI is free and reproducible), GitHub Actions CI with dependency scanning, Docker/Compose for local parity, and **Terraform-based Infrastructure-as-Code** for a Google Cloud deployment (Cloud Run, Artifact Registry, Secret Manager, and a GCS bucket for durable vector storage). It is a production-**oriented** demonstration of how to design, test, secure, and ship an AI feature end-to-end.
+The project is also **operationally complete**: it ships with a fast, deterministic test suite (67 backend + 13 frontend tests; external AI is mocked so CI is free and reproducible), GitHub Actions CI with dependency scanning, Docker/Compose for local parity, and **Terraform-based Infrastructure-as-Code** for a Google Cloud deployment (Cloud Run, Artifact Registry, Secret Manager, and a GCS bucket for durable vector storage). It is a production-**oriented** demonstration of how to design, test, secure, and ship an AI feature end-to-end.
+
+**What has been verified:** the full RAG pipeline, the Gemini integration (`gemini-3.5-flash-lite`, live API) and the UI were run locally and are shown in the README screenshots. The Terraform configuration validates but has not been applied to a real GCP project, and the manual deploy workflow has never been triggered.
 
 ---
 

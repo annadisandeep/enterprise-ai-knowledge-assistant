@@ -46,7 +46,7 @@ flowchart LR
     Engine --> Store
     Engine --> Registry
     Engine --> Provider
-    Provider -->|HTTPS| Gemini["Gemini 2.5 Flash"]
+    Provider -->|HTTPS| Gemini["Gemini API<br/>(gemini-3.5-flash-lite default)"]
 ```
 
 ---
@@ -105,7 +105,7 @@ A single interface with two implementations:
 
 | Provider | Behavior |
 | --- | --- |
-| `gemini` | Calls **Gemini 2.5 Flash** via the official `google-genai` SDK, with temperature, max-output-tokens, and timeout settings |
+| `gemini` | Calls the configured Gemini model (default **`gemini-3.5-flash-lite`**, set via `GEMINI_MODEL`) through the official `google-genai` SDK, with temperature, max-output-tokens, and timeout settings |
 | `mock` | Returns a deterministic canned answer — no network, no API key — used in tests/CI |
 
 Provider errors map to clean HTTP codes: `503` (missing/invalid credentials), `504` (timeout), `429` (quota), `502` (other provider error).
@@ -178,7 +178,7 @@ flowchart TD
     AR --> CR["Cloud Run service<br/>(stateless container)"]
     SM["Secret Manager<br/>(API_KEY, GEMINI_API_KEY)"] -->|injected env| CR
     GCS[("GCS bucket<br/>Chroma + registry")] -->|gcsfuse volume| CR
-    CR -->|HTTPS| GEM["Gemini 2.5 Flash"]
+    CR -->|HTTPS| GEM["Gemini API<br/>(gemini-3.5-flash-lite default)"]
     User["End user"] -->|HTTPS| CR
 ```
 
